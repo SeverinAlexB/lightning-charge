@@ -5,12 +5,16 @@ class CoreLightning {
     info;
     rune;
     async connect() {
+        this.rune = process.env.LN_RUNE
+        await this._init()
+        this.info = await this.getinfo();
+        return this.info
+    }
+
+    async _init() {
         this.socket = await LNSocket()
         this.socket.genkey()
         await this.socket.connect_and_init(process.env.LN_NODE_ID, process.env.LN_NODE_IP)
-        this.rune = process.env.LN_RUNE
-        this.info = await this.getinfo();
-        return this.info
     }
 
     async getinfo() {
@@ -61,8 +65,8 @@ class CoreLightning {
     }
 
     async _execute(func) {
-        if (!this.socket.connected) {
-            await this.socket.connect_and_init(process.env.LN_NODE_ID, process.env.LN_NODE_IP)
+        if (!this.socket || !this.socket.connected || this.socket.closed) {
+            await this._init()
         }
         const ret = await func()
         if (ret.error) {
