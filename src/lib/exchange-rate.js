@@ -1,6 +1,6 @@
-import big from 'big.js'
-import request from 'superagent'
-import memoize from './memoize'
+const big = require('big.js')
+const request = require('superagent')
+const memoize = require('./memoize')
 
 require('superagent-proxy')(request)
 

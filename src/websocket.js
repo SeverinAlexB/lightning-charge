@@ -1,5 +1,5 @@
-import WebSocket from 'ws'
-import basicAuth from 'basic-auth'
+const WebSocket = require('ws')
+const basicAuth = require('basic-auth')
 
 module.exports = (app, payListen, apiToken) => {
   const verifyClient = info => {

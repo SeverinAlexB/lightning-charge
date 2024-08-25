@@ -9,6 +9,7 @@
   },
   "scripts": {
     "start": "bin/start.sh",
+    "build": "bin/dist.sh",
     "test": "bin/test.sh",
     "testenv": "bin/testenv.sh",
     "dist": "bin/dist.sh",
@@ -25,6 +26,7 @@
     "express": "^4.18.2",
     "fmtbtc": "0.0.3",
     "knex": "^2.5.1",
+    "lnsocket": "^0.3.3",
     "meow": "^9.0.0",
     "morgan": "^1.10.0",
     "nanoid": "^3.3.6",
@@ -40,6 +42,7 @@
     "@babel/core": "^7.22.9",
     "@babel/preset-env": "^7.22.9",
     "@babel/register": "^7.22.5",
+    "dotenv": "^16.4.5",
     "eventsource": "^2.0.2",
     "get-port-cli": "^3.0.0",
     "mocha": "^10.2.0",

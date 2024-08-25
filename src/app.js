@@ -1,20 +1,30 @@
-import { join } from 'path'
-import wrap from './lib/promise-wrap'
-import { getToken, authMiddleware } from './lib/auth'
+const { join } = require('path')
+require('dotenv').config();
+const wrap = require('./lib/promise-wrap')
+const { getToken, authMiddleware } = require('./lib/auth')
+const CoreLightning = require('./CoreLightning');
 
-const lnPath   = process.env.LN_PATH || join(require('os').homedir(), '.lightning')
-    , apiToken = getToken(process.env.API_TOKEN, process.env.COOKIE_FILE)
+const apiToken = getToken(process.env.API_TOKEN, process.env.COOKIE_FILE);
 
 ;(async () => {
-  const db = require('knex')(require('../knexfile'))
-      , ln = require('clightning-client')(lnPath)
-      , lnconf = await ln.listconfigs()
+  const db = require('knex')(require('../knexfile'));
+  const cln = new CoreLightning()
+  try {
+    await cln.connect()
+    console.log('Connected to', cln.name)
+  } catch (e) {
+    console.error('Failed to connect to core-lightning', e)
+    return
+  }
+
+
 
   await db.migrate.latest({ directory: join(__dirname, '../migrations') })
 
-  const model = require('./model')(db, ln)
-      , auth  = authMiddleware('api-token', apiToken)
-      , payListen = require('./lib/payment-listener')(lnPath, model)
+  const model = require('./model')(db, cln)
+  const auth  = authMiddleware('api-token', apiToken);
+  const payListen = require('./lib/payment-listener')(model);
+  await payListen.init()
 
   const app = require('express')()
 
@@ -33,9 +43,9 @@ const lnPath   = process.env.LN_PATH || join(require('os').homedir(), '.lightnin
     next()
   })
 
-  app.get('/info', auth, wrap(async (req, res) => res.send(await ln.getinfo())))
+  app.get('/info', auth, wrap(async (req, res) => res.send(await cln.getinfo())))
 
-  require('./invoicing')(app, payListen, model, auth, lnconf)
+  require('./invoicing')(app, payListen, model, auth, null)
   require('./checkout')(app, payListen)
 
   require('./sse')(app, payListen, auth)
@@ -53,7 +63,15 @@ const lnPath   = process.env.LN_PATH || join(require('os').homedir(), '.lightnin
   })
 })()
 
-process.on('unhandledRejection', err => { throw err })
+process.on('unhandledRejection', err => { 
+  console.error('Unhandled rejection', err); 
+  throw err 
+})
+
+process.on('uncaughtException', function (err) {
+  console.error('Unhandled exception', err); 
+  throw err 
+});
 
 process.on('SIGTERM', err => {
   console.error('Caught SIGTERM, shutting down')

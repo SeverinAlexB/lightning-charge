@@ -1,9 +1,9 @@
-import fs      from 'fs'
-import path    from 'path'
-import express from 'express'
-import qrcode  from 'qrcode'
-import fmtbtc  from 'fmtbtc'
-import wrap    from './lib/promise-wrap'
+const fs      = require('fs')
+const path =  require('path')
+const express = require('express')
+const qrcode = require('qrcode')
+const fmtbtc = require('fmtbtc')
+const wrap =  require('./lib/promise-wrap')
 
 const rpath = name => path.join(__dirname, name)
 

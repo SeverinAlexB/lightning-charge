@@ -1,8 +1,8 @@
-import fs from 'fs'
-import crypto from 'crypto'
-import basicAuth from 'basic-auth'
+const fs = require('fs')
+const crypto = require('crypto')
+const basicAuth = require('basic-auth')
 
-export const getToken = (apiToken, cookieFile) => {
+module.exports.getToken = (apiToken, cookieFile) => {
   if (apiToken && cookieFile)
     throw new Error('Please specify one of --api-token or --cookie-file, not both')
 
@@ -16,7 +16,7 @@ export const getToken = (apiToken, cookieFile) => {
   return apiToken
 }
 
-export const authMiddleware = (name, pass, realm='Lightning Charge') => (req, res, next) => {
+module.exports.authMiddleware = (name, pass, realm='Lightning Charge') => (req, res, next) => {
   const cred = basicAuth(req)
 
   if (!cred || cred.name !== name || cred.pass !== pass) {

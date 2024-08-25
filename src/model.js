@@ -1,5 +1,5 @@
-import { nanoid } from 'nanoid'
-import { toMsat } from './lib/exchange-rate'
+const { nanoid } = require('nanoid')
+const { toMsat } = require('./lib/exchange-rate')
 
 const debug  = require('debug')('lightning-charge')
     , status = inv => inv.pay_index ? 'paid' : inv.expires_at > now() ? 'unpaid' : 'expired'
@@ -14,14 +14,14 @@ const debug  = require('debug')('lightning-charge')
 
 const defaultDesc = process.env.INVOICE_DESC_DEFAULT || 'Lightning Charge Invoice'
 
-module.exports = (db, ln) => {
+module.exports = (db, cln) => {
   const newInvoice = async props => {
     const { currency, amount, expiry, description, metadata, webhook } = props
 
-    const id       = nanoid()
-        , msatoshi = props.msatoshi ? ''+props.msatoshi : currency ? await toMsat(currency, amount) : ''
-        , desc     = props.description ? ''+props.description : defaultDesc
-        , lninv    = await ln.invoice(msatoshi || 'any', id, desc, expiry)
+    const id       = nanoid();
+    const msatoshi = props.msatoshi ? ''+props.msatoshi : currency ? await toMsat(currency, amount) : '';
+    const desc     = props.description ? ''+props.description : defaultDesc;
+    const lninv    = await cln.invoice(msatoshi || 'any', id, desc, expiry);
 
     const invoice = {
       id, msatoshi, description: desc
@@ -46,7 +46,7 @@ module.exports = (db, ln) => {
     db('invoice').where({ id }).first().then(r => r && format(r))
 
   const delInvoice = async (id, status) => {
-    await ln.delinvoice(id, status)
+    await cln.delinvoice(id, status)
     await db('invoice').where({ id }).del()
   }
 
@@ -58,7 +58,7 @@ module.exports = (db, ln) => {
 
   const getLastPaid = _ =>
     db('invoice').max('pay_index as index')
-                 .first().then(r => r.index)
+                 .first().then(r => r.index ?? 0)
 
   const delExpired = ttl =>
     db('invoice').select('id')
@@ -69,7 +69,7 @@ module.exports = (db, ln) => {
       // invoices that still exists on c-lightning won't be deleted from charge.
       // c-lightning should be configured for automatic cleanup via autocleaninvoice
       .then(invs => Promise.all(invs.map(inv =>
-        ln.listinvoices(inv.id).then(r => r.invoices.length ? null : inv.id)
+        cln.listinvoices(inv.id).then(r => r.invoices.length ? null : inv.id)
       )))
       .then(ids => ids.filter(id => id != null))
       // delete all expired invoices not found on c-lightning

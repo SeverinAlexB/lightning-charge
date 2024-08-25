@@ -1,4 +1,4 @@
-import wrap from './lib/promise-wrap'
+const wrap = require('./lib/promise-wrap')
 
 const debug = require('debug')('lightning-charge')
 

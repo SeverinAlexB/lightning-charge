@@ -1,5 +1,5 @@
-import request from 'superagent'
-import wrap from './lib/promise-wrap'
+const request = require('superagent')
+const wrap = require('./lib/promise-wrap')
 
 require('superagent-proxy')(request)
 
